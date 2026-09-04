@@ -1,5 +1,5 @@
 {
-  "name": "chuppy-bird",
+  "name": "ticket-reviewer",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,13 +12,8 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.9",
     "typescript": "~6.0.2",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
-  },
-  "dependencies": {
-    "@types/three": "^0.185.0",
-    "three": "^0.185.0"
   }
 }
