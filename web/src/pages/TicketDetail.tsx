@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { AdoAttachment } from '../../../shared/types.ts';
+import type { AdoAttachment, AdoComment } from '../../../shared/types.ts';
 import { api } from '../api/client.ts';
 import { useAsync } from '../api/useAsync.ts';
 import { AdoHtml } from '../components/AdoHtml.tsx';
 import { AiPanel } from '../components/AiPanel.tsx';
 import { Avatar } from '../components/Avatar.tsx';
+import { CommentComposer } from '../components/CommentComposer.tsx';
 import { CommentThread, relativeTime } from '../components/CommentThread.tsx';
 import { Lightbox } from '../components/Lightbox.tsx';
 import { ReadinessPanel } from '../components/Readiness.tsx';
 import { ErrorNote, Loading } from '../components/States.tsx';
+import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { typeColor } from '../components/TicketCard.tsx';
 
 function formatSize(bytes: number | null): string {
@@ -76,6 +78,13 @@ export function TicketDetail() {
   const item = useAsync(() => api.workItem(project, workItemId), [project, workItemId]);
   const comments = useAsync(() => api.comments(project, workItemId), [project, workItemId]);
 
+  /**
+   * Appended locally rather than re-fetching: the thread is already on screen,
+   * and ADO's own read-back can lag a moment behind the write.
+   */
+  const [posted, setPosted] = useState<AdoComment[]>([]);
+  useEffect(() => setPosted([]), [project, workItemId, comments.data]);
+
   return (
     <main className="page">
       <header className="page__header">
@@ -83,6 +92,7 @@ export function TicketDetail() {
           ←
         </Link>
         <h1 className="muted">#{id}</h1>
+        <ThemeToggle />
         <button type="button" onClick={item.reload} aria-label="Refresh">
           ↻
         </button>
@@ -175,7 +185,14 @@ export function TicketDetail() {
             <h2>Comments</h2>
             {comments.loading ? <Loading /> : null}
             {comments.error ? <ErrorNote error={comments.error} onRetry={comments.reload} /> : null}
-            {comments.data ? <CommentThread comments={comments.data} onImageTap={onImageTap} /> : null}
+            {comments.data ? (
+              <CommentThread comments={[...comments.data, ...posted]} onImageTap={onImageTap} />
+            ) : null}
+            <CommentComposer
+              project={project}
+              workItemId={workItemId}
+              onPosted={(comment) => setPosted((previous) => [...previous, comment])}
+            />
           </section>
 
           {item.data.webUrl ? (

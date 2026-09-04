@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client.ts';
 import { useAsync } from '../api/useAsync.ts';
 import { Empty, ErrorNote, Loading } from '../components/States.tsx';
+import { ThemeToggle } from '../components/ThemeToggle.tsx';
 
 export function Projects() {
   const { data, error, loading, reload } = useAsync(() => api.projects(), []);
@@ -10,6 +11,7 @@ export function Projects() {
     <main className="page">
       <header className="page__header">
         <h1>Projects</h1>
+        <ThemeToggle />
         <button type="button" onClick={reload} aria-label="Refresh">
           ↻
         </button>

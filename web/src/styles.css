@@ -1,9 +1,14 @@
 /*
  * Palette follows Azure DevOps' own light/dark themes closely enough that a
  * rendered work item looks like the real thing on a phone.
+ *
+ * The dark tokens appear twice on purpose. Under "system" there is no
+ * data-theme attribute and the media query decides; an explicit choice stamps
+ * data-theme and must win in *both* directions — including forcing light while
+ * the phone is dark, which a media query alone cannot express.
  */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --bg: #f8f8f8;
   --surface: #ffffff;
@@ -26,7 +31,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
     --bg: #0b0d10;
     --surface: #1b1a19;
     --surface-alt: #252423;
@@ -39,6 +46,22 @@
     --warn: #e0b054;
     --ok: #6bb700;
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0d10;
+  --surface: #1b1a19;
+  --surface-alt: #252423;
+  --fg: #f3f2f1;
+  --muted: #a19f9d;
+  --line: #3b3a39;
+  --accent: #4ea1e0;
+  --accent-fg: #06263c;
+  --danger: #f1707b;
+  --warn: #e0b054;
+  --ok: #6bb700;
 }
 
 * {
@@ -603,4 +626,55 @@ button:disabled {
 .markdown code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.88em;
+}
+
+/* ---------- theme toggle ---------- */
+
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  min-width: var(--tap);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.login__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.login__heading h1 {
+  margin: 0;
+}
+
+/* ---------- comment composer ---------- */
+
+.composer {
+  margin-top: 1rem;
+}
+
+.composer__input {
+  width: 100%;
+  font: inherit;
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  resize: none;
+  overflow-y: auto;
+}
+
+.composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.composer__actions button {
+  padding: 0 1.2rem;
 }

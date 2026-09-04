@@ -135,6 +135,86 @@ describe('ADO routes', () => {
   });
 });
 
+describe('posting a comment', () => {
+  it('creates a comment and returns it', async () => {
+    const app = await appWith();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/projects/Payments/workitems/1042/comments',
+      payload: { text: 'Looks right to me' },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({ createdBy: { displayName: 'You' } });
+    expect(response.json().html).toContain('Looks right to me');
+    await app.close();
+  });
+
+  it('shows up in the thread afterwards', async () => {
+    const app = await appWith();
+    await app.inject({
+      method: 'POST',
+      url: '/api/projects/Payments/workitems/1042/comments',
+      payload: { text: 'Second pass' },
+    });
+
+    const thread = await app.inject({
+      method: 'GET',
+      url: '/api/projects/Payments/workitems/1042/comments',
+    });
+    expect(thread.json()).toHaveLength(3);
+    await app.close();
+  });
+
+  it('rejects an empty or missing body', async () => {
+    const app = await appWith();
+    for (const payload of [{ text: '   ' }, {}, { text: 42 }]) {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/projects/Payments/workitems/1042/comments',
+        payload,
+      });
+      expect(response.statusCode).toBe(400);
+    }
+    await app.close();
+  });
+
+  it('rejects a non-numeric work item id', async () => {
+    const app = await appWith();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/projects/P/workitems/abc/comments',
+      payload: { text: 'hi' },
+    });
+    expect(response.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('requires a session, like every other write', async () => {
+    const app = await appWith({ APP_PASSWORD: 'hunter2' });
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/projects/P/workitems/1/comments',
+      payload: { text: 'hi' },
+    });
+    expect(response.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('stores escaped markup, never live HTML', async () => {
+    const app = await appWith();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/projects/Payments/workitems/1042/comments',
+      payload: { text: '<img src=x onerror=alert(1)>' },
+    });
+
+    expect(response.json().html).not.toContain('<img');
+    expect(response.json().html).toContain('&lt;img');
+    await app.close();
+  });
+});
+
 describe('error handling', () => {
   it('surfaces the PAT hint on an auth failure', async () => {
     const failing = sourceWith({

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { api, ApiFailure } from '../api/client.ts';
+import { ThemeToggle } from '../components/ThemeToggle.tsx';
 
 export function Login({ onSignedIn }: { onSignedIn: () => void }) {
   const [password, setPassword] = useState('');
@@ -23,7 +24,10 @@ export function Login({ onSignedIn }: { onSignedIn: () => void }) {
   return (
     <main className="page page--centred">
       <form className="login" onSubmit={submit}>
-        <h1>Ticket Reviewer</h1>
+        <div className="login__heading">
+          <h1>Ticket Reviewer</h1>
+          <ThemeToggle />
+        </div>
         <label htmlFor="password">Password</label>
         <input
           id="password"

@@ -1,11 +1,12 @@
 # ADO Ticket Reviewer
 
-Read your Azure DevOps board and work items from a phone, and run your
-`ado-ticket-analyze` skill against a ticket without opening a laptop.
+Read your Azure DevOps board and work items from a phone, comment on them, and
+run your `ado-ticket-analyze` skill against a ticket without opening a laptop.
 
 The work item renders the way it does in Azure DevOps — inline screenshots,
 tables, mention pills, the comment thread — and the analysis streams in as
-Claude writes it.
+Claude writes it. Light and dark themes, following the phone unless you pick
+one.
 
 ## Why there is a server
 
@@ -53,7 +54,7 @@ matter most:
 | Variable | Notes |
 | --- | --- |
 | `ADO_BASE_URL` | Collection root, no trailing slash. `https://dev.azure.com/my-org`, or `https://tfs.internal/tfs/DefaultCollection` on-prem. |
-| `ADO_PAT` | Scopes: **Work Items (Read)**, **Project and Team (Read)**, and **Identity (Read)** for avatars. |
+| `ADO_PAT` | Scopes: **Work Items (Read & Write)**, **Project and Team (Read)**, and **Identity (Read)** for avatars. Read alone is enough for everything except posting comments. |
 | `ADO_API_VERSION` | Defaults to `7.1`. Azure DevOps Server may need an older version. |
 | `APP_PASSWORD` | Sign-in for the app itself. **Leaving it empty makes the app open to anyone who can reach it**, and the server says so at boot. |
 | `SESSION_SECRET` | Signs the session cookie. Without one, every restart signs you out. |
@@ -103,9 +104,20 @@ npm test           # unit tests
 npm run typecheck  # both tsconfigs
 ```
 
+## Comments
+
+Posting a comment is the only write this app performs. What you type is
+escaped before it is stored: Azure DevOps comments are an HTML field, and the
+real ADO web UI renders whatever we put there, so unescaped input would inject
+markup into every client that opens the thread.
+
+If posting fails with 401 or 403 while reading works, the PAT is missing the
+**Work Items (Read & Write)** scope.
+
 ## Known limits
 
-- **Read-only.** No editing, commenting, or moving cards.
+- **Comments are the only write.** No editing fields, changing state, or moving
+  cards.
 - **Boards only.** Backlogs, queries and sprints are not exposed.
 - A board fetches at most 400 work items.
 - Azure DevOps Server (on-prem) is supported by configuration but has not been

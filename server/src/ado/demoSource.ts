@@ -15,13 +15,17 @@ import {
   makeWorkItem,
 } from '../../../shared/fixtures.ts';
 import { AdoError } from './errors.ts';
-import type { BoardOptions, TicketSource } from './service.ts';
+import { renderAdoHtml } from './html.ts';
+import { textToAdoHtml, type BoardOptions, type TicketSource } from './service.ts';
 
 /**
  * Fixture-backed source for DEMO_MODE, so the UI can be run and reviewed
  * without a PAT, a VPN, or a real organization.
  */
 export class DemoSource implements TicketSource {
+  /** Comments posted during this run, so the demo composer does something. */
+  readonly #added = new Map<number, AdoComment[]>();
+
   async listProjects(): Promise<AdoProject[]> {
     return demoProjects;
   }
@@ -57,10 +61,26 @@ export class DemoSource implements TicketSource {
   }
 
   async listComments(_project: string, id: number): Promise<AdoComment[]> {
-    return id === 1042 ? demoComments : [];
+    const base = id === 1042 ? demoComments : [];
+    return [...base, ...(this.#added.get(id) ?? [])];
+  }
+
+  async addComment(_project: string, id: number, text: string): Promise<AdoComment> {
+    const trimmed = text.trim();
+    if (!trimmed) throw new AdoError('A comment cannot be empty', 400);
+
+    const comment: AdoComment = {
+      id: Date.now(),
+      html: renderAdoHtml(textToAdoHtml(trimmed)) ?? '',
+      createdBy: { id: 'demo', displayName: 'You', avatarUrl: null },
+      createdDate: new Date().toISOString(),
+      modifiedDate: null,
+    };
+    this.#added.set(id, [...(this.#added.get(id) ?? []), comment]);
+    return comment;
   }
 
   invalidate(): void {
-    // Fixtures never go stale.
+    // Fixtures never go stale; comments added in this run are kept on purpose.
   }
 }

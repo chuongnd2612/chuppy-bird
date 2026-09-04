@@ -54,6 +54,22 @@ export async function registerAdoRoutes(app: FastifyInstance, source: TicketSour
     },
   );
 
+  app.post<{ Params: WorkItemParams; Body: { text?: string } }>(
+    '/api/projects/:project/workitems/:id/comments',
+    async (request, reply) => {
+      const id = parseWorkItemId(request.params.id);
+      if (id === null) return reply.code(400).send({ error: 'Work item id must be a positive integer' });
+
+      const text = request.body?.text;
+      if (typeof text !== 'string' || !text.trim()) {
+        return reply.code(400).send({ error: 'A comment cannot be empty' });
+      }
+
+      const comment = await source.addComment(request.params.project, id, text, toSignal(reply));
+      return reply.code(201).send(comment);
+    },
+  );
+
   /** Pull-to-refresh: drop cached reads so the next fetch really hits ADO. */
   app.post<{ Querystring: { prefix?: string } }>('/api/refresh', async (request) => {
     source.invalidate(request.query.prefix);

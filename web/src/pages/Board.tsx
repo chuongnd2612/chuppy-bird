@@ -4,6 +4,7 @@ import type { AdoCard } from '../../../shared/types.ts';
 import { api } from '../api/client.ts';
 import { useAsync } from '../api/useAsync.ts';
 import { Empty, ErrorNote, Loading } from '../components/States.tsx';
+import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { TicketCard } from '../components/TicketCard.tsx';
 
 /** Cards ADO placed in a column the board does not define still have to go somewhere. */
@@ -67,6 +68,7 @@ export function Board() {
           ←
         </Link>
         <h1>{project}</h1>
+        <ThemeToggle />
         <button type="button" onClick={hardRefresh} aria-label="Refresh">
           ↻
         </button>

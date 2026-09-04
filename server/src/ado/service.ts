@@ -10,6 +10,7 @@ import type {
 import { adoBaseUrl, type Config } from '../config.ts';
 import { TtlCache } from './cache.ts';
 import type { AdoClient } from './client.ts';
+import { AdoError } from './errors.ts';
 import { CARD_FIELDS } from './fields.ts';
 import { renderAdoHtml } from './html.ts';
 import { toCard, toIdentity, toWorkItem, type RawWorkItem } from './mappers.ts';
@@ -23,6 +24,26 @@ const COMMENTS_API_VERSION = '7.1-preview.4';
 
 /** States that mean "off the board" unless the caller asks for them. */
 const DONE_STATES = ['Closed', 'Done', 'Completed', 'Cut'];
+
+/**
+ * Turns what the user typed into the HTML Azure DevOps stores.
+ *
+ * ADO comments are an HTML field. Posting raw input would let a comment carry
+ * markup — or script — into every client that renders the thread, including the
+ * real ADO web UI. Escape first, then add only the line breaks back.
+ */
+export function textToAdoHtml(text: string): string {
+  const escaped = text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+  return escaped
+    .split(/\r?\n/)
+    .map((line) => (line.trim() ? `<div>${line}</div>` : '<div><br></div>'))
+    .join('');
+}
 
 interface ListResponse<T> {
   count?: number;
@@ -40,8 +61,12 @@ export interface TicketSource {
   getBoard(project: string, team: string, boardId: string, options?: BoardOptions): Promise<AdoBoard>;
   getWorkItem(project: string, id: number, signal?: AbortSignal): Promise<AdoWorkItem>;
   listComments(project: string, id: number, signal?: AbortSignal): Promise<AdoComment[]>;
+  addComment(project: string, id: number, text: string, signal?: AbortSignal): Promise<AdoComment>;
   invalidate(prefix?: string): void;
 }
+
+/** Longest comment Azure DevOps accepts. */
+export const MAX_COMMENT_LENGTH = 30_000;
 
 export interface BoardOptions {
   includeClosed?: boolean;
@@ -199,6 +224,47 @@ export class AdoService implements TicketSource {
       });
       return toWorkItem(raw, this.#origin);
     });
+  }
+
+  /**
+   * Posts a comment. This is the only write the app performs, and it needs a
+   * PAT with Work Items (Read & Write) — a read-only PAT fails here alone.
+   */
+  async addComment(project: string, id: number, text: string, signal?: AbortSignal): Promise<AdoComment> {
+    const trimmed = text.trim();
+    if (!trimmed) throw new AdoError('A comment cannot be empty', 400);
+    if (trimmed.length > MAX_COMMENT_LENGTH) {
+      throw new AdoError(`A comment cannot exceed ${MAX_COMMENT_LENGTH} characters`, 400);
+    }
+
+    const created = await this.#client.requestJson<{
+      id: number;
+      text?: string;
+      createdBy?: unknown;
+      createdDate?: string;
+    }>({
+      path: `${encodeURIComponent(project)}/_apis/wit/workItems/${id}/comments`,
+      method: 'POST',
+      apiVersion: COMMENTS_API_VERSION,
+      body: { text: textToAdoHtml(trimmed) },
+      signal,
+    });
+
+    // The thread and the work item's changed date are both stale now.
+    this.#cache.clear(`comments:${project}:${id}`);
+    this.#cache.clear(`workitem:${project}:${id}`);
+
+    return {
+      id: created.id,
+      html: renderAdoHtml(created.text ?? null) ?? '',
+      createdBy: toIdentity(created.createdBy, this.#origin) ?? {
+        id: null,
+        displayName: 'You',
+        avatarUrl: null,
+      },
+      createdDate: created.createdDate ?? new Date().toISOString(),
+      modifiedDate: null,
+    };
   }
 
   async listComments(project: string, id: number, signal?: AbortSignal): Promise<AdoComment[]> {

@@ -76,6 +76,13 @@ export const api = {
   comments: (project: string, id: number) =>
     request<AdoComment[]>(`/api/projects/${encodeURIComponent(project)}/workitems/${id}/comments`),
 
+  addComment: (project: string, id: number, text: string) =>
+    request<AdoComment>(`/api/projects/${encodeURIComponent(project)}/workitems/${id}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    }),
+
   refresh: (prefix?: string) =>
     request<{ ok: true }>(`/api/refresh${prefix ? `?prefix=${encodeURIComponent(prefix)}` : ''}`, {
       method: 'POST',
