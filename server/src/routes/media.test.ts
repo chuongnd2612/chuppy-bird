@@ -98,12 +98,24 @@ describe('avatar proxy', () => {
 });
 
 describe('demo mode', () => {
-  it('does not register media routes, since there is no PAT to proxy with', async () => {
+  it('serves a real placeholder PNG rather than a broken image', async () => {
     const { config } = loadConfig({ DEMO_MODE: 'true', SESSION_SECRET: 's'.repeat(32) });
     const app = await buildApp({ config, logger: false });
     const response = await app.inject({ method: 'GET', url: '/api/attachments/abc' });
 
-    expect(response.statusCode).toBe(404);
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toBe('image/png');
+    // PNG signature, so this is decodable rather than merely labelled.
+    expect(response.rawPayload.subarray(0, 8)).toEqual(
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    );
+    await app.close();
+  });
+
+  it('has no avatars to serve', async () => {
+    const { config } = loadConfig({ DEMO_MODE: 'true', SESSION_SECRET: 's'.repeat(32) });
+    const app = await buildApp({ config, logger: false });
+    expect((await app.inject({ method: 'GET', url: '/api/avatar' })).statusCode).toBe(404);
     await app.close();
   });
 });

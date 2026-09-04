@@ -14,6 +14,7 @@ import { generateSecret } from './auth/session.ts';
 import type { Config } from './config.ts';
 import { registerAdoRoutes } from './routes/ado.ts';
 import { registerAuth } from './routes/auth.ts';
+import { registerDemoMediaRoutes } from './routes/demoMedia.ts';
 import { registerMediaRoutes } from './routes/media.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,8 +54,10 @@ export async function buildApp({ config, logger = true, source, client }: AppOpt
     source ?? (adoClient ? new AdoService(adoClient, config) : new DemoSource());
   await registerAdoRoutes(app, ticketSource);
 
-  // Demo mode has no PAT, so there is nothing to proxy media with.
+  // Demo mode has no PAT to proxy with, so it synthesises placeholder media
+  // rather than showing the broken images a missing route would produce.
   if (adoClient) await registerMediaRoutes(app, adoClient);
+  else await registerDemoMediaRoutes(app);
 
   // Turn an ADO failure into an honest reply instead of a bare 500. The hint is
   // the part that tells the user their PAT expired rather than "request failed".
