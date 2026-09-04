@@ -1,0 +1,680 @@
+/*
+ * Palette follows Azure DevOps' own light/dark themes closely enough that a
+ * rendered work item looks like the real thing on a phone.
+ *
+ * The dark tokens appear twice on purpose. Under "system" there is no
+ * data-theme attribute and the media query decides; an explicit choice stamps
+ * data-theme and must win in *both* directions — including forcing light while
+ * the phone is dark, which a media query alone cannot express.
+ */
+:root {
+  color-scheme: light;
+
+  --bg: #f8f8f8;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f4;
+  --fg: #1f1f1f;
+  --muted: #605e5c;
+  --line: #e1dfdd;
+  --accent: #0078d4;
+  --accent-fg: #ffffff;
+  --danger: #a4262c;
+  --warn: #8a6100;
+  --ok: #107c10;
+
+  --radius: 6px;
+  --tap: 44px;
+
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #0b0d10;
+    --surface: #1b1a19;
+    --surface-alt: #252423;
+    --fg: #f3f2f1;
+    --muted: #a19f9d;
+    --line: #3b3a39;
+    --accent: #4ea1e0;
+    --accent-fg: #06263c;
+    --danger: #f1707b;
+    --warn: #e0b054;
+    --ok: #6bb700;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0d10;
+  --surface: #1b1a19;
+  --surface-alt: #252423;
+  --fg: #f3f2f1;
+  --muted: #a19f9d;
+  --line: #3b3a39;
+  --accent: #4ea1e0;
+  --accent-fg: #06263c;
+  --danger: #f1707b;
+  --warn: #e0b054;
+  --ok: #6bb700;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+}
+
+.page {
+  padding: 1rem max(1rem, env(safe-area-inset-left)) calc(2rem + env(safe-area-inset-bottom));
+}
+
+.muted {
+  color: var(--muted);
+}
+
+a {
+  color: var(--accent);
+}
+
+button {
+  min-height: var(--tap);
+  font: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- layout ---------- */
+
+.page--centred {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+}
+
+.page__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 0.5rem 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.page__header h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.page__header button,
+.back {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  text-decoration: none;
+  color: var(--fg);
+  border-radius: var(--radius);
+}
+
+.state {
+  padding: 1rem 0;
+}
+
+.state--error {
+  color: var(--danger);
+}
+
+/* ---------- lists ---------- */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: var(--tap);
+  padding: 0.75rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---------- board ---------- */
+
+.board__controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.board__controls select {
+  font: inherit;
+  padding: 0.5rem;
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/*
+ * Columns scroll horizontally and snap, so a phone swipes between them the way
+ * the ADO board does on a desktop. Each column then scrolls vertically on its
+ * own.
+ */
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(85vw, 320px);
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.column {
+  scroll-snap-align: start;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  min-height: 40vh;
+}
+
+.column__header {
+  position: sticky;
+  top: 0;
+  margin: 0 0 0.5rem;
+  padding: 0.25rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-alt);
+}
+
+.column__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ---------- cards ---------- */
+
+.card {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+}
+
+.card__type {
+  width: 4px;
+  flex: none;
+}
+
+.card__body {
+  padding: 0.5rem 0.6rem 0.5rem 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.card__meta,
+.card__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.card__footer {
+  margin-top: 0.5rem;
+}
+
+.card__id {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.card__title {
+  margin: 0.3rem 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.chip {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+}
+
+.chip--priority {
+  color: var(--danger);
+}
+
+/* ---------- avatars ---------- */
+
+.avatar {
+  border-radius: 50%;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+.avatar--initials {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ---------- detail ---------- */
+
+.detail__title {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+  margin: 1rem 0;
+}
+
+.detail__title h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.fields dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.fields dd {
+  margin: 0.1rem 0 0;
+}
+
+.field--identity {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.section {
+  margin: 1.5rem 0;
+}
+
+.section h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+}
+
+.readiness {
+  border-left: 3px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.readiness--ok { border-left-color: var(--ok); color: var(--muted); margin: 1rem 0; }
+.readiness--warn { border-left-color: var(--warn); }
+.readiness--fail { border-left-color: var(--danger); }
+
+.readiness ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.finding--error { color: var(--danger); }
+.finding--warning { color: var(--warn); }
+
+.external {
+  display: inline-block;
+  margin: 1.5rem 0;
+}
+
+/* ---------- attachments ---------- */
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.thumb {
+  padding: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---------- comments ---------- */
+
+.comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.comment {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.comment__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+/* ---------- ADO rich text ---------- */
+
+/*
+ * Matches how Azure DevOps renders a work item body: bordered tables, mention
+ * pills, and code blocks that scroll rather than forcing the page sideways.
+ */
+.ado-html {
+  overflow-wrap: anywhere;
+}
+
+.ado-html img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  cursor: zoom-in;
+}
+
+.ado-html table {
+  border-collapse: collapse;
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+}
+
+.ado-html th,
+.ado-html td {
+  border: 1px solid var(--line);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+
+.ado-html th {
+  background: var(--surface-alt);
+}
+
+.ado-html pre {
+  background: var(--surface-alt);
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.ado-html code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.ado-html blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+}
+
+.ado-html [data-vss-mention] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 0 0.2rem;
+}
+
+/* ---------- lightbox ---------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.92);
+  padding: env(safe-area-inset-top) 0.5rem;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 90dvh;
+  object-fit: contain;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: calc(0.5rem + env(safe-area-inset-top));
+  right: 0.5rem;
+  min-width: var(--tap);
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+}
+
+/* ---------- login ---------- */
+
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(22rem, 90vw);
+}
+
+.login input {
+  font: inherit;
+  padding: 0.7rem;
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+/* ---------- AI panel ---------- */
+
+.ai__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.ai__actions button {
+  padding: 0 1rem;
+}
+
+.ai__summary {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai__followup {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.ai__followup input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.6rem;
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.ai__followup button {
+  padding: 0 1rem;
+}
+
+.markdown {
+  overflow-wrap: anywhere;
+}
+
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.markdown p {
+  margin: 0.5rem 0;
+}
+
+.markdown ul {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+}
+
+.markdown pre {
+  background: var(--surface-alt);
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+}
+
+/* ---------- theme toggle ---------- */
+
+.theme-toggle {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  min-width: var(--tap);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.login__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.login__heading h1 {
+  margin: 0;
+}
+
+/* ---------- comment composer ---------- */
+
+.composer {
+  margin-top: 1rem;
+}
+
+.composer__input {
+  width: 100%;
+  font: inherit;
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  resize: none;
+  overflow-y: auto;
+}
+
+.composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.composer__actions button {
+  padding: 0 1.2rem;
+}
