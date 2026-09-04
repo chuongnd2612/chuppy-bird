@@ -1,0 +1,81 @@
+/*
+ * Palette follows Azure DevOps' own light/dark themes closely enough that a
+ * rendered work item looks like the real thing on a phone.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f8f8f8;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f4;
+  --fg: #1f1f1f;
+  --muted: #605e5c;
+  --line: #e1dfdd;
+  --accent: #0078d4;
+  --accent-fg: #ffffff;
+  --danger: #a4262c;
+  --warn: #8a6100;
+  --ok: #107c10;
+
+  --radius: 6px;
+  --tap: 44px;
+
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d10;
+    --surface: #1b1a19;
+    --surface-alt: #252423;
+    --fg: #f3f2f1;
+    --muted: #a19f9d;
+    --line: #3b3a39;
+    --accent: #4ea1e0;
+    --accent-fg: #06263c;
+    --danger: #f1707b;
+    --warn: #e0b054;
+    --ok: #6bb700;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+}
+
+.page {
+  padding: 1rem max(1rem, env(safe-area-inset-left)) calc(2rem + env(safe-area-inset-bottom));
+}
+
+.muted {
+  color: var(--muted);
+}
+
+a {
+  color: var(--accent);
+}
+
+button {
+  min-height: var(--tap);
+  font: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

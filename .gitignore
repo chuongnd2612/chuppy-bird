@@ -18,3 +18,7 @@ coverage
 .DS_Store
 *.suo
 *.sw?
+
+# Local config
+.env
+.env.local
