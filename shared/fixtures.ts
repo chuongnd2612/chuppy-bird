@@ -80,3 +80,24 @@ export const demoBoard: AdoBoard = {
     },
   ],
 };
+
+export const demoTeams = [{ id: 't1', name: 'Payments Team' }];
+
+export const demoBoardRefs = [{ id: 'b1', name: 'Payments Team' }];
+
+export const demoComments = [
+  {
+    id: 1,
+    html: '<div>Reproduced on staging — the gateway pool saturates at ~780 rps.</div>',
+    createdBy: { id: 'u1', displayName: 'Mai Tran', avatarUrl: null },
+    createdDate: '2026-08-21T04:00:00Z',
+    modifiedDate: null,
+  },
+  {
+    id: 2,
+    html: '<div>Raising the pool size only moves the cliff. Needs a retry budget.</div>',
+    createdBy: { id: 'u2', displayName: 'Hao Nguyen', avatarUrl: null },
+    createdDate: '2026-08-22T08:30:00Z',
+    modifiedDate: null,
+  },
+];

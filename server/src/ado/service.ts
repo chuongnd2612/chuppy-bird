@@ -29,6 +29,20 @@ interface ListResponse<T> {
   value?: T[];
 }
 
+/**
+ * What the routes depend on, so DEMO_MODE can swap in fixtures without the
+ * route layer knowing which one it is talking to.
+ */
+export interface TicketSource {
+  listProjects(signal?: AbortSignal): Promise<AdoProject[]>;
+  listTeams(project: string, signal?: AbortSignal): Promise<AdoTeam[]>;
+  listBoards(project: string, team: string, signal?: AbortSignal): Promise<AdoBoardRef[]>;
+  getBoard(project: string, team: string, boardId: string, options?: BoardOptions): Promise<AdoBoard>;
+  getWorkItem(project: string, id: number, signal?: AbortSignal): Promise<AdoWorkItem>;
+  listComments(project: string, id: number, signal?: AbortSignal): Promise<AdoComment[]>;
+  invalidate(prefix?: string): void;
+}
+
 export interface BoardOptions {
   includeClosed?: boolean;
   signal?: AbortSignal;
@@ -38,7 +52,7 @@ export interface BoardOptions {
  * The read model behind every screen. Everything is cached briefly: reopening a
  * board on a phone otherwise costs a WIQL query plus a batch fetch each time.
  */
-export class AdoService {
+export class AdoService implements TicketSource {
   readonly #client: AdoClient;
   readonly #origin: string;
   readonly #cache: TtlCache<unknown>;
