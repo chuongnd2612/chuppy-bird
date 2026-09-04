@@ -13,6 +13,7 @@ import { AdoService, type TicketSource } from './ado/service.ts';
 import { generateSecret } from './auth/session.ts';
 import type { Config } from './config.ts';
 import { registerAdoRoutes } from './routes/ado.ts';
+import { registerAiRoutes } from './routes/ai.ts';
 import { registerAuth } from './routes/auth.ts';
 import { registerDemoMediaRoutes } from './routes/demoMedia.ts';
 import { registerMediaRoutes } from './routes/media.ts';
@@ -53,6 +54,7 @@ export async function buildApp({ config, logger = true, source, client }: AppOpt
   const ticketSource =
     source ?? (adoClient ? new AdoService(adoClient, config) : new DemoSource());
   await registerAdoRoutes(app, ticketSource);
+  await registerAiRoutes(app, ticketSource);
 
   // Demo mode has no PAT to proxy with, so it synthesises placeholder media
   // rather than showing the broken images a missing route would produce.

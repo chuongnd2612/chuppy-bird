@@ -32,6 +32,37 @@ const schema = z
 
     /** Seconds to keep ADO responses in the in-memory cache. */
     CACHE_TTL_SECONDS: z.coerce.number().int().nonnegative().default(60),
+
+    /* ---- Claude analysis ---- */
+
+    AI_ENABLED: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((v) => v === 'true'),
+    /** Resolved on PATH unless an absolute path is given. */
+    CLAUDE_BIN: z.string().default('claude'),
+    /** Invoked as `/<skill>`; must be installed where this server runs. */
+    AI_SKILL: z.string().default('ado-ticket-analyze'),
+    /** Model alias or id; empty leaves the CLI default in place. */
+    AI_MODEL: z.string().default(''),
+    /**
+     * Working directory for the CLI. The ticket JSON is written here and
+     * nothing else, so the analysis cannot wander into the repo.
+     */
+    AI_WORKSPACE_DIR: z.string().default(''),
+    AI_TIMEOUT_MS: z.coerce.number().int().positive().default(300_000),
+    /** This runs on a personal machine; more than a couple at once is unkind. */
+    AI_MAX_CONCURRENT: z.coerce.number().int().positive().default(1),
+    AI_PERMISSION_MODE: z
+      .enum(['dontAsk', 'acceptEdits', 'plan', 'default', 'auto'])
+      .default('dontAsk'),
+    /** Comma-separated. Kept narrow by default: the skill only needs to read. */
+    AI_ALLOWED_TOOLS: z.string().default('Read,Grep,Glob'),
+    /**
+     * How the skill is invoked. {skill} and {file} are substituted. Configurable
+     * because only the skill's author knows what arguments it expects.
+     */
+    AI_PROMPT_TEMPLATE: z.string().default('/{skill} {file}'),
   })
   .superRefine((cfg, ctx) => {
     if (cfg.DEMO_MODE) return;

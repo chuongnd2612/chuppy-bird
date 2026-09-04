@@ -4,6 +4,7 @@ import type { AdoAttachment } from '../../../shared/types.ts';
 import { api } from '../api/client.ts';
 import { useAsync } from '../api/useAsync.ts';
 import { AdoHtml } from '../components/AdoHtml.tsx';
+import { AiPanel } from '../components/AiPanel.tsx';
 import { Avatar } from '../components/Avatar.tsx';
 import { CommentThread, relativeTime } from '../components/CommentThread.tsx';
 import { Lightbox } from '../components/Lightbox.tsx';
@@ -167,6 +168,8 @@ export function TicketDetail() {
               </ul>
             </section>
           ) : null}
+
+          <AiPanel project={project} workItemId={item.data.id} />
 
           <section className="section">
             <h2>Comments</h2>
