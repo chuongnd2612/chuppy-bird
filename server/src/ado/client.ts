@@ -139,13 +139,25 @@ function backoffMs(attempt: number): number {
   return 2 ** (attempt - 1) * 200 + Math.floor(Math.random() * 100);
 }
 
+export interface SignInPageOptions {
+  /**
+   * Whether an HTML body on a successful response is itself suspicious. True
+   * for JSON endpoints; false when fetching attachments, where an .html file is
+   * a legitimate payload and only the status code can give away a sign-in page.
+   */
+  htmlIsSuspicious?: boolean;
+}
+
 /**
  * Azure DevOps answers a bad PAT with 203 + an HTML sign-in page, and a 302 to
  * the login host when the collection is behind an interactive auth flow.
  */
-export function assertNotSignInPage(response: Response): void {
+export function assertNotSignInPage(
+  response: Response,
+  { htmlIsSuspicious = true }: SignInPageOptions = {},
+): void {
   const contentType = response.headers.get('content-type') ?? '';
-  const isHtml = contentType.includes('text/html');
+  const isHtml = htmlIsSuspicious && contentType.includes('text/html');
 
   if (response.status === 203 || (isHtml && response.status < 400)) {
     throw new AdoAuthError('Azure DevOps rejected the PAT and returned its sign-in page.', PAT_HINT);
